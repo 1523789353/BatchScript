@@ -12,4 +12,5 @@ P.S. 仅适用于Windows10 22H2及以上系统
 | fixsys.bat        | 修复系统                                                          |
 | getArch.bat       | 获取系统架构, 存入OSArch变量                                      |
 | getOSVersion.bat  | 获取系统版本信息, 版本号存入OSVerNum变量 版本名存入OSVerName变量 |
+| navicat_resetter.bat | 重设navicat试用(仅测试过Navicat15)                             |
 | port.bat          | 端口清理工具                                                      |
