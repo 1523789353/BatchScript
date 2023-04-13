@@ -6,7 +6,7 @@ P.S. 仅适用于Windows10 22H2及以上系统
 
 | 脚本              | 功能                                                              |
 | ----------------- | ----------------------------------------------------------------- |
-| MusicClean.bat    | 清理WMP生成的产品缩略图                                           |
+| MusicClean.bat    | 清理WMP生成的唱片缩略图                                           |
 | ResetTransMac.bat | 重设TransMac试用期                                                |
 | admin.bat         | CMD提权                                                           |
 | fixsys.bat        | 修复系统                                                          |
