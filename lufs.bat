@@ -13,7 +13,7 @@ exit /b %ErrorLevel%
     :: 这是因为有损编码容易带来峰值过冲（peak overshoot），而且一般码率越低过冲的可能幅度越大。
 
     :: 综合响度、真峰值、响度范围
-    set loudness=-16
+    set loudness=-18
     set truepeak=-0.5
     set loudrange=11
 
@@ -55,9 +55,9 @@ exit /b %ErrorLevel%
     ) else (
         set bit_pcm=%bit_depth%
     )
-    echo 使用 %bit_pcm% 位进行规范化处理
+    echo 使用 %bit_pcm% 位进行标准化处理
 
-    :: 第一遍：分析音频流并获取规范化参数
+    :: 第一遍：分析音频流并获取标准化参数
     set "eval.cmdline=ffmpeg -hide_banner -i "%~1" -c:a:0 pcm_s%bit_pcm%le -af "loudnorm=I=%loudness%:TP=%truepeak%:LRA=%loudrange%:print_format=json" -f null - 2>&1 | findstr "\{ \"\ \:\ \" }" | find /v "#""
     call :eval %%%%eval.cmdline%%%%
 
@@ -85,7 +85,7 @@ exit /b %ErrorLevel%
     echo 目标偏移:     %TO% LU
     echo=
 
-    :: 第二遍：应用参数对音频流进行规范化
+    :: 第二遍：应用参数对音频流进行标准化
     :: 如果处于动态模式，采样率将为 192kHz
     :: 将流传输给 QAAC 进行编码
     :: 自动通过内置 SoX 进行向下采样至 48kHz
