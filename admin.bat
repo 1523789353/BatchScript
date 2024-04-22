@@ -1,10 +1,21 @@
 @echo off
-2>&1 >nul fsutil dirty query %systemdrive%
-if "%ErrorLevel%" == "0" (
-    echo å½“å‰å·²æœ‰ç®¡ç†å‘˜æƒé™
-    exit /b
-)
+call :main %*
+exit /b %ErrorLevel%
 
-echo è¯·æ­£åœ¨è¯·æ±‚ç®¡ç†å‘˜æƒé™...
-mshta vbscript:createobject("shell.application").shellexecute("cmd","/S /C ""prompt ç®¡ç†å‘˜$s$p$g&start /D ""%cd%"" /B /Wait cmd""","","runas",1)(window.close)
-exit
+:main
+    call :is_admin
+    if "%ErrorLevel%" == "0" (
+        echo=µ±Ç°ÒÑÓĞ¹ÜÀíÔ±È¨ÏŞ
+        exit /b 0
+    )
+    call :elevate "cmd" "/c @prompt ¹ÜÀíÔ±$s$p$g && start /d "%cd%" /b /wait cmd /k %*"
+exit /b 0
+
+:is_admin <¼ì²é¹ÜÀíÔ±È¨ÏŞ>
+    powershell -c "([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)"|>nul findstr True
+exit /b %ErrorLevel%
+
+:elevate <ÇëÇó¹ÜÀíÔ±È¨ÏŞ>
+    echo=ÇëÇó¹ÜÀíÔ±È¨ÏŞ...
+    powershell -c "Start-Process -Verb RunAs '%~1' -ArgumentList '%~2 '"
+exit /b 0
