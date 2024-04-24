@@ -1,7 +1,10 @@
 :: coding: gb2312
-:: @see https://www.bilibili.com/read/cv17301168/
-@echo off
+:: 参见: https://www.bilibili.com/read/cv17301168/
+@setlocal
+@if not defined debug set "debug=0"
+@if "%debug%" == "0" echo off
 call :main %*
+@endlocal
 exit /b %ErrorLevel%
 
 :main <音频文件路径> [目标响度]
@@ -14,10 +17,10 @@ exit /b %ErrorLevel%
 
     if "%loudness%" == "" set loudness=-16
 
-    if "%1" == "" goto :usage
-    if "%1" == "-h" goto :usage
-    if "%1" == "--help" goto :usage
-    if "%1" == "/?" goto :usage
+    if "%~1" == "" goto :usage
+    if "%~1" == "-h" goto :usage
+    if "%~1" == "--help" goto :usage
+    if "%~1" == "/?" goto :usage
 
     if not exist "%~1" (
         echo=找不到文件 "%~1"
@@ -27,7 +30,8 @@ exit /b %ErrorLevel%
     echo=正在处理文件 "%~1"
     echo=
 
-    call :eval ffprobe -v error -select_streams a:0 -show_entries "stream=bits_per_sample,bits_per_raw_sample" -of "default=noprint_wrappers=1:nokey=1" "%~1"
+    set "eval.cmdline=ffprobe -v error -select_streams a:0 -show_entries "stream=bits_per_sample,bits_per_raw_sample" -of "default=noprint_wrappers=1:nokey=1" "%~1""
+    call :eval %%%%eval.cmdline%%%%
     set bits=%eval.result[0]%
     set bits_raw=%eval.result[1]%
 
@@ -57,7 +61,6 @@ exit /b %ErrorLevel%
     echo=1-pass: 分析音频流并获取标准化参数
 
     :: 第一遍：分析音频流并获取标准化参数
-    :: 无法将管道符传递给call, 所以使用变量传递命令行
     set "eval.cmdline=ffmpeg -hide_banner -i "%~1" -c:a:0 pcm_s%bit_pcm%le -af "loudnorm=I=%loudness%:TP=%truepeak%:LRA=%loudrange%:print_format=json" -f null - 2>&1 | findstr "\{ \"\ \:\ \" }" | find /v "#""
     call :eval %%%%eval.cmdline%%%%
 
@@ -123,4 +126,5 @@ exit /b
         call set "eval.result[%%eval.line%%]=%%i"
         set /a eval.line+=1
     )
+    if not "%debug%" == "0" set eval
 exit /b
