@@ -29,7 +29,7 @@ exit /b %ErrorLevel%
     echo=正在处理文件 "%~1"
     echo=
 
-    set "eval.cmdline=ffprobe -v error -select_streams a:0 -show_entries "stream=bits_per_sample,bits_per_raw_sample" -of "default=noprint_wrappers=1:nokey=1" "%~1""
+    set "eval.cmdline=ffprobe -threads 0 -i "%~1" -select_streams a:0 -show_entries "stream=bits_per_sample,bits_per_raw_sample" -of "default=noprint_wrappers=1:nokey=1" -v error"
     call :eval %%%%eval.cmdline%%%%
     set bits=%eval.result[0]%
     set bits_raw=%eval.result[1]%
@@ -60,7 +60,7 @@ exit /b %ErrorLevel%
     echo=1-pass: 分析音频流并获取标准化参数
 
     :: 第一遍：分析音频流并获取标准化参数
-    set "eval.cmdline=ffmpeg -hide_banner -i "%~1" -c:a:0 pcm_s%bit_pcm%le -af "loudnorm=I=%loudness%:TP=%truepeak%:LRA=%loudrange%:print_format=json" -f null - 2>&1 | findstr "\{ \"\ \:\ \" }" | find /v "#""
+    set "eval.cmdline=ffmpeg -threads 0 -hwaccel auto -i "%~1" -c:a:0 pcm_s%bit_pcm%le -af "loudnorm=I=%loudness%:TP=%truepeak%:LRA=%loudrange%:print_format=json" -f null - -nostdin -hide_banner 2>&1 | findstr "\{ \"\ \:\ \" }" | find /v "#""
     call :eval %%%%eval.cmdline%%%%
 
     call :readVal "eval.result[1]" II
@@ -74,25 +74,25 @@ exit /b %ErrorLevel%
     call :readVal "eval.result[9]" NT
     call :readVal "eval.result[10]" TO
 
-    echo 输入综合响度: %II% LUFS
-    echo 输入真峰值:   %ITP% dBTP
-    echo 输入响度范围: %ILRA% LU
-    echo 输入阈值:     %IT% LUFS
-    echo 输出综合响度: %OI% LUFS
-    echo 输出真峰值:   %OTP% dBTP
-    echo 输出响度范围: %OLRA% LU
-    echo 输出阈值:     %OT% LUFS
-    echo 标准化类型:   %NT%
-    echo 目标偏移:     %TO% LU
+    echo 输入综合响度:  %II.align% LUFS
+    echo 输入真峰值:    %ITP.align% dBTP
+    echo 输入响度范围:  %ILRA.align% LU
+    echo 输入阈值:      %IT.align% LUFS
+    echo 输出综合响度:  %OI.align% LUFS
+    echo 输出真峰值:    %OTP.align% dBTP
+    echo 输出响度范围:  %OLRA.align% LU
+    echo 输出阈值:      %OT.align% LUFS
+    echo 标准化类型:    %NT.align%
+    echo 目标偏移:      %TO.align% LU
     echo=
 
 
     :: 第二遍：应用参数对音频流进行标准化
     :: 如果处于动态模式，采样率将为 192kHz
     echo=2-pass: 音频标准化
-    ffmpeg -hide_banner -y -i "%~1" -c:a pcm_s%bit_pcm%le -af "loudnorm=I=%loudness%:TP=%truepeak%:LRA=%loudrange%:measured_I=%II%:measured_tp=%ITP%:measured_LRA=%ILRA%:measured_thresh=%IT%:offset=%TO%:print_format=summary" -f wav "%~dpn1_%loudness%LUFS.wav" -v quiet
+    ffmpeg -y -threads 0 -hwaccel auto -i "%~1" -c:a pcm_s%bit_pcm%le -af "loudnorm=I=%loudness%:TP=%truepeak%:LRA=%loudrange%:measured_I=%II%:measured_tp=%ITP%:measured_LRA=%ILRA%:measured_thresh=%IT%:offset=%TO%:print_format=summary" -copyts -map_chapters -1 -map_metadata -1 -f wav "%~dpn1_%loudness%LUFS.wav" -nostdin -hide_banner -v quiet
     echo=完成.
-    explorer /select,"%~dpn1_%loudness%lufs.wav"
+    explorer /select,"%~dpn1_%loudness%LUFS.wav"
 exit /b
 
 :usage
@@ -107,11 +107,22 @@ exit /b
 exit /b
 
 :readVal <in> <out>
+    :: 截取json key:value中的value
     call set "readVal.pair=%%%~1%%"
     set "readVal.pair=%readVal.pair:*:=%"
     set "readVal.pair=%readVal.pair:*"=%"
     set "readVal.pair=%readVal.pair:"=%"
     set "%~2=%readVal.pair:,=%"
+    :: 文本左对齐, 用于显示
+    if "%readVal.pair:~0,1%" == "-" (
+        call set "%~2.align=%%%~2%%        "
+    ) else (
+        call set "%~2.align= %%%~2%%       "
+    )
+    call set "%~2.align=%%%~2.align:~0,8%%"
+exit /b
+
+:align <var-name> <length>
 exit /b
 
 :eval <...cmdline>
