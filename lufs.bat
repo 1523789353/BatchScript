@@ -3,6 +3,10 @@
 @setlocal
 @if not defined debug set "debug=0"
 @if "%debug%" == "0" echo off
+if "%~1" == "" goto :usage
+if "%~1" == "-h" goto :usage
+if "%~1" == "--help" goto :usage
+if "%~1" == "/?" goto :usage
 call :main %*
 @endlocal
 exit /b %ErrorLevel%
@@ -16,11 +20,6 @@ exit /b %ErrorLevel%
     :: 这是因为有损编码容易带来峰值过冲（peak overshoot），而且一般码率越低过冲的可能幅度越大。
 
     if "%loudness%" == "" set loudness=-16
-
-    if "%~1" == "" goto :usage
-    if "%~1" == "-h" goto :usage
-    if "%~1" == "--help" goto :usage
-    if "%~1" == "/?" goto :usage
 
     if not exist "%~1" (
         echo=找不到文件 "%~1"
