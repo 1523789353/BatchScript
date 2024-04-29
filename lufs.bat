@@ -90,7 +90,7 @@ exit /b %ErrorLevel%
     :: 第二遍：应用参数对音频流进行标准化
     :: 如果处于动态模式，采样率将为 192kHz
     echo=2-pass: 音频标准化
-    ffmpeg -y -threads 0 -hwaccel auto -i "%~1" -c:a pcm_s%bit_pcm%le -af "loudnorm=I=%loudness%:TP=%truepeak%:LRA=%loudrange%:measured_I=%II%:measured_tp=%ITP%:measured_LRA=%ILRA%:measured_thresh=%IT%:offset=%TO%:print_format=summary" -copyts -map_chapters -1 -map_metadata -1 -f wav "%~dpn1_%loudness%LUFS.wav" -nostdin -hide_banner -v quiet
+    ffmpeg -y -threads 0 -hwaccel auto -i "%~1" -c:a pcm_s%bit_pcm%le -rf64 auto -af "loudnorm=I=%loudness%:TP=%truepeak%:LRA=%loudrange%:measured_I=%II%:measured_tp=%ITP%:measured_LRA=%ILRA%:measured_thresh=%IT%:offset=%TO%:print_format=summary" -copyts -async 1 -map_chapters -1 -map_metadata -1 -f wav "%~dpn1_%loudness%LUFS.wav" -nostdin -hide_banner -v quiet
     echo=完成.
     explorer /select,"%~dpn1_%loudness%LUFS.wav"
 exit /b
